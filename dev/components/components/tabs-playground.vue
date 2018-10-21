@@ -23,6 +23,16 @@
       <q-checkbox v-model="alert" />
     </div>
 
+    <div style="display: inline-block; margin-bottom: 50px; height: 150px; position: relative;">
+      <q-tabs vertical class="vertical-tabs">
+        <q-tab slot="title" icon="wifi" />
+        <q-tab slot="title" icon="bluetooth" />
+        <q-tab alert slot="title" v-if="third" label="O" />
+        <q-tab slot="title" icon="wifi" />
+        <q-tab slot="title" icon="bluetooth" />
+      </q-tabs>
+    </div>
+
     <q-tabs>
       <q-tab alert slot="title" v-if="third" label="Oaua" />
       <q-tab count="5" slot="title" label="Gogu" />
@@ -349,6 +359,8 @@ export default {
 <style lang="stylus">
   .tabs-playground .q-tabs
     margin-bottom 25px
+  .tabs-playground .vertical-tabs
+    margin-bottom unset !important
   .test
     .q-router-link-active, .q-router-link-exact-active
       &:after

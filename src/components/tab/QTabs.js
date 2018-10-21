@@ -1,4 +1,4 @@
-import { width } from '../../utils/dom.js'
+import { width, height } from '../../utils/dom.js'
 import debounce from '../../utils/debounce.js'
 import QIcon from '../icon/QIcon.js'
 import { listenOpts } from '../../utils/event.js'
@@ -36,7 +36,7 @@ export default {
     position: {
       type: String,
       default: 'top',
-      validator: v => ['top', 'bottom'].includes(v)
+      validator: v => ['top', 'bottom', 'left', 'right'].includes(v)
     },
     color: {
       type: String,
@@ -49,7 +49,11 @@ export default {
     animated: Boolean,
     swipeable: Boolean,
     panesContainerClass: String,
-    underlineColor: String
+    underlineColor: String,
+    vertical: {
+      type: Boolean,
+      default: false
+    }
   },
   data () {
     return {
@@ -88,14 +92,23 @@ export default {
   },
   computed: {
     classes () {
+      let pos
+      if (this.vertical) {
+        pos = (this.position === 'left' || this.position === 'top') ? 'left' : 'right'
+      }
+      else {
+        pos = (this.position === 'top' || this.position === 'left') ? 'top' : 'bottom'
+      }
       return [
-        `q-tabs-position-${this.position}`,
+        this.vertical ? 'q-tabs-vertical' : '',
+        `q-tabs-position-${pos}`,
         `q-tabs-${this.inverted ? 'inverted' : 'normal'}`,
         this.twoLines ? 'q-tabs-two-lines' : ''
       ]
     },
     innerClasses () {
       const cls = [ `q-tabs-align-${this.align}` ]
+      cls.push(this.vertical ? 'column' : 'row')
       this.glossy && cls.push('glossy')
       if (this.inverted) {
         cls.push(`text-${this.textColor || this.color}`)
@@ -106,11 +119,26 @@ export default {
       }
       return cls
     },
+    scrollerClasses () {
+      return [
+        this.vertical ? 'column' : 'row'
+      ]
+    },
     posbarClasses () {
       const cls = []
       this.inverted && cls.push(`text-${this.textColor || this.color}`)
       this.data.highlight && cls.push('highlight')
       return cls
+    },
+    startScrollClasses () {
+      return [
+        this.vertical ? 'q-tabs-up-scroll' : 'q-tabs-left-scroll'
+      ]
+    },
+    endScrollClasses () {
+      return [
+        this.vertical ? 'q-tabs-down-scroll' : 'q-tabs-right-scroll'
+      ]
     }
   },
   methods: {
@@ -285,11 +313,13 @@ export default {
       if (!this.$q.platform.is.desktop) {
         return
       }
-      this.scrollerWidth = width(this.$refs.scroller)
-      if (this.scrollerWidth === 0 && this.$refs.scroller.scrollWidth === 0) {
+
+      const scrollerScrollSize = this.vertical ? this.$refs.scroller.scrollHeight : this.$refs.scroller.scrollWidth
+      this.scrollerElementSize = this.vertical ? height(this.$refs.scroller) : width(this.$refs.scroller)
+      if (this.scrollerElementSize === 0 && scrollerScrollSize === 0) {
         return
       }
-      if (this.scrollerWidth + 5 < this.$refs.scroller.scrollWidth) {
+      if (this.scrollerElementSize + 5 < scrollerScrollSize) {
         this.$refs.tabs.classList.add('scrollable')
         this.scrollable = true
         this.__updateScrollIndicator()
@@ -303,9 +333,17 @@ export default {
       if (!this.$q.platform.is.desktop || !this.scrollable) {
         return
       }
-      let action = this.$refs.scroller.scrollLeft + width(this.$refs.scroller) + 5 >= this.$refs.scroller.scrollWidth ? 'add' : 'remove'
-      this.$refs.leftScroll.classList[this.$refs.scroller.scrollLeft <= 0 ? 'add' : 'remove']('disabled')
-      this.$refs.rightScroll.classList[action]('disabled')
+
+      if (this.vertical) {
+        let action = this.$refs.scroller.scrollTop + height(this.$refs.scroller) + 5 >= this.$refs.scroller.scrollHeight ? 'add' : 'remove'
+        this.$refs.startScroll.classList[this.$refs.scroller.scrollTop <= 0 ? 'add' : 'remove']('disabled')
+        this.$refs.endScroll.classList[action]('disabled')
+      }
+      else {
+        let action = this.$refs.scroller.scrollLeft + width(this.$refs.scroller) + 5 >= this.$refs.scroller.scrollWidth ? 'add' : 'remove'
+        this.$refs.startScroll.classList[this.$refs.scroller.scrollLeft <= 0 ? 'add' : 'remove']('disabled')
+        this.$refs.endScroll.classList[action]('disabled')
+      }
     },
     __getTabElByName (value) {
       const tab = this.$children.find(child => child.name === value && child.$el && child.$el.nodeType === 1)
@@ -326,26 +364,26 @@ export default {
       let
         contentRect = this.$refs.scroller.getBoundingClientRect(),
         rect = tab.getBoundingClientRect(),
-        tabWidth = rect.width,
-        offset = rect.left - contentRect.left
+        tabSize = this.vertical ? rect.height : rect.width,
+        offset = this.vertical ? rect.top - contentRect.top : rect.left - contentRect.left
 
       if (offset < 0) {
         if (noAnimation) {
-          this.$refs.scroller.scrollLeft += offset
+          this.$refs.scroller[this.vertical ? 'scrollTop' : 'scrollLeft'] += offset
         }
         else {
-          this.__animScrollTo(this.$refs.scroller.scrollLeft + offset)
+          this.__animScrollTo(this.$refs.scroller[this.vertical ? 'scrollTop' : 'scrollLeft'] + offset)
         }
         return
       }
 
-      offset += tabWidth - this.$refs.scroller.offsetWidth
+      offset += tabSize - this.$refs.scroller.offsetWidth
       if (offset > 0) {
         if (noAnimation) {
-          this.$refs.scroller.scrollLeft += offset
+          this.$refs.scroller[this.vertical ? 'scrollTop' : 'scrollLeft'] += offset
         }
         else {
-          this.__animScrollTo(this.$refs.scroller.scrollLeft + offset)
+          this.__animScrollTo(this.$refs.scroller[this.vertical ? 'scrollTop' : 'scrollLeft'] + offset)
         }
       }
     },
@@ -370,7 +408,7 @@ export default {
     },
     __scrollTowards (value) {
       let
-        scrollPosition = this.$refs.scroller.scrollLeft,
+        scrollPosition = (this.vertical ? this.$refs.scroller.scrollTop : this.$refs.scroller.scrollLeft),
         direction = value < scrollPosition ? -1 : 1,
         done = false
 
@@ -387,7 +425,7 @@ export default {
         scrollPosition = value
       }
 
-      this.$refs.scroller.scrollLeft = scrollPosition
+      this.$refs.scroller[this.vertical ? 'scrollTop' : 'scrollLeft'] = scrollPosition
       return done
     }
   },
@@ -397,13 +435,14 @@ export default {
       'class': this.classes
     }, [
       h('div', {
-        staticClass: 'q-tabs-head row',
+        staticClass: 'q-tabs-head',
         ref: 'tabs',
         'class': this.innerClasses
       }, [
         h('div', {
           ref: 'scroller',
-          staticClass: 'q-tabs-scroller row no-wrap'
+          staticClass: 'q-tabs-scroller no-wrap',
+          'class': this.scrollerClasses
         }, [
           this.$slots.title,
           process.env.THEME !== 'ios'
@@ -424,8 +463,9 @@ export default {
         ]),
 
         h('div', {
-          ref: 'leftScroll',
-          staticClass: 'row flex-center q-tabs-left-scroll',
+          ref: 'startScroll',
+          staticClass: 'row flex-center q-tabs-scroll',
+          'class': this.startScrollClasses,
           on: {
             mousedown: this.__scrollToStart,
             touchstart: this.__scrollToStart,
@@ -435,13 +475,14 @@ export default {
           }
         }, [
           h(QIcon, {
-            props: { name: this.$q.icon.tabs.left }
+            props: { name: (this.vertical ? this.$q.icon.tabs.up : this.$q.icon.tabs.left) }
           })
         ]),
 
         h('div', {
-          ref: 'rightScroll',
-          staticClass: 'row flex-center q-tabs-right-scroll',
+          ref: 'endScroll',
+          staticClass: 'row flex-center q-tabs-scroll',
+          'class': this.endScrollClasses,
           on: {
             mousedown: this.__scrollToEnd,
             touchstart: this.__scrollToEnd,
@@ -451,7 +492,7 @@ export default {
           }
         }, [
           h(QIcon, {
-            props: { name: this.$q.icon.tabs.right }
+            props: { name: (this.vertical ? this.$q.icon.tabs.down : this.$q.icon.tabs.right) }
           })
         ])
       ]),
