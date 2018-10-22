@@ -36,7 +36,7 @@ export default {
     position: {
       type: String,
       default: 'top',
-      validator: v => ['top', 'bottom'].includes(v)
+      validator: v => ['top', 'bottom', 'left', 'right'].includes(v)
     },
     color: {
       type: String,
@@ -49,7 +49,11 @@ export default {
     animated: Boolean,
     swipeable: Boolean,
     panesContainerClass: String,
-    underlineColor: String
+    underlineColor: String,
+    vertical: {
+      type: Boolean,
+      default: false
+    }
   },
   data () {
     return {
@@ -88,14 +92,23 @@ export default {
   },
   computed: {
     classes () {
+      let pos
+      if (this.vertical) {
+        pos = (this.position === 'left' || this.position === 'top') ? 'left' : 'right'
+      }
+      else {
+        pos = (this.position === 'top' || this.position === 'left') ? 'top' : 'bottom'
+      }
       return [
-        `q-tabs-position-${this.position}`,
+        this.vertical ? 'q-tabs-vertical' : '',
+        `q-tabs-position-${pos}`,
         `q-tabs-${this.inverted ? 'inverted' : 'normal'}`,
         this.twoLines ? 'q-tabs-two-lines' : ''
       ]
     },
     innerClasses () {
       const cls = [ `q-tabs-align-${this.align}` ]
+      cls.push(this.vertical ? 'column' : 'row')
       this.glossy && cls.push('glossy')
       if (this.inverted) {
         cls.push(`text-${this.textColor || this.color}`)
@@ -106,11 +119,26 @@ export default {
       }
       return cls
     },
+    scrollerClasses () {
+      return [
+        this.vertical ? 'column' : 'row'
+      ]
+    },
     posbarClasses () {
       const cls = []
       this.inverted && cls.push(`text-${this.textColor || this.color}`)
       this.data.highlight && cls.push('highlight')
       return cls
+    },
+    startScrollClasses () {
+      return [
+        this.vertical ? 'q-tabs-up-scroll' : 'q-tabs-left-scroll'
+      ]
+    },
+    endScrollClasses () {
+      return [
+        this.vertical ? 'q-tabs-down-scroll' : 'q-tabs-right-scroll'
+      ]
     }
   },
   methods: {
@@ -304,8 +332,8 @@ export default {
         return
       }
       let action = this.$refs.scroller.scrollLeft + width(this.$refs.scroller) + 5 >= this.$refs.scroller.scrollWidth ? 'add' : 'remove'
-      this.$refs.leftScroll.classList[this.$refs.scroller.scrollLeft <= 0 ? 'add' : 'remove']('disabled')
-      this.$refs.rightScroll.classList[action]('disabled')
+      this.$refs.startScroll.classList[this.$refs.scroller.scrollLeft <= 0 ? 'add' : 'remove']('disabled')
+      this.$refs.endScroll.classList[action]('disabled')
     },
     __getTabElByName (value) {
       const tab = this.$children.find(child => child.name === value && child.$el && child.$el.nodeType === 1)
@@ -397,13 +425,14 @@ export default {
       'class': this.classes
     }, [
       h('div', {
-        staticClass: 'q-tabs-head row',
+        staticClass: 'q-tabs-head',
         ref: 'tabs',
         'class': this.innerClasses
       }, [
         h('div', {
           ref: 'scroller',
-          staticClass: 'q-tabs-scroller row no-wrap'
+          staticClass: 'q-tabs-scroller no-wrap',
+          'class': this.scrollerClasses
         }, [
           this.$slots.title,
           process.env.THEME !== 'ios'
@@ -424,8 +453,9 @@ export default {
         ]),
 
         h('div', {
-          ref: 'leftScroll',
-          staticClass: 'row flex-center q-tabs-left-scroll',
+          ref: 'startScroll',
+          staticClass: 'row flex-center q-tabs-scroll',
+          'class': this.startScrollClasses,
           on: {
             mousedown: this.__scrollToStart,
             touchstart: this.__scrollToStart,
@@ -440,8 +470,9 @@ export default {
         ]),
 
         h('div', {
-          ref: 'rightScroll',
-          staticClass: 'row flex-center q-tabs-right-scroll',
+          ref: 'endScroll',
+          staticClass: 'row flex-center q-tabs-scroll',
+          'class': this.endScrollClasses,
           on: {
             mousedown: this.__scrollToEnd,
             touchstart: this.__scrollToEnd,
