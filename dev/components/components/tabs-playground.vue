@@ -23,11 +23,17 @@
       <q-checkbox v-model="alert" />
     </div>
 
-    <div style="display: inline-block; margin-bottom: 50px; height: 150px; position: relative;">
+    <div style="display: inline-block; margin-bottom: 50px; height: 400px; position: relative;">
       <q-tabs vertical class="vertical-tabs">
         <q-tab slot="title" icon="wifi" />
         <q-tab slot="title" icon="bluetooth" />
         <q-tab alert slot="title" v-if="third" label="O" />
+        <q-tab slot="title" icon="wifi" />
+        <q-tab slot="title" icon="bluetooth" />
+        <q-tab slot="title" icon="wifi" />
+        <q-tab slot="title" icon="bluetooth" />
+        <q-tab slot="title" icon="wifi" />
+        <q-tab slot="title" icon="bluetooth" />
         <q-tab slot="title" icon="wifi" />
         <q-tab slot="title" icon="bluetooth" />
       </q-tabs>
