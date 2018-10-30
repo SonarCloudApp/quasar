@@ -3,7 +3,10 @@ import Vue from 'vue'
 import QIcon from '../icon/QIcon.js'
 import QResizeObserver from '../observer/QResizeObserver.js'
 
-function getIndicatorClass (color, top) {
+function getIndicatorClass (color, top, vertical) {
+  if (vertical) {
+    return `q-tab__indicator--vertical absolute-${top ? 'left' : 'right'}${color ? ` text-${color}` : ''}`
+  }
   return `absolute-${top ? 'top' : 'bottom'}${color ? ` text-${color}` : ''}`
 }
 
@@ -39,7 +42,11 @@ export default Vue.extend({
     topIndicator: Boolean,
     narrowIndicator: Boolean,
     inlineLabel: Boolean,
-    noCaps: Boolean
+    noCaps: Boolean,
+    vertical: {
+      type: Boolean,
+      default: false
+    }
   },
 
   data () {
@@ -47,7 +54,7 @@ export default Vue.extend({
       tabs: {
         current: this.value,
         activeColor: this.activeColor,
-        indicatorClass: getIndicatorClass(this.indicatorColor, this.topIndicator),
+        indicatorClass: getIndicatorClass(this.indicatorColor, this.topIndicator, this.vertical),
         narrowIndicator: this.narrowIndicator,
         inlineLabel: this.inlineLabel,
         noCaps: this.noCaps
@@ -181,7 +188,12 @@ export default Vue.extend({
           oldPos = oldEl.getBoundingClientRect(),
           newPos = newEl.getBoundingClientRect()
 
-        newEl.style.transform = `translate3d(${oldPos.left - newPos.left}px, 0, 0) scale3d(${newPos.width ? oldPos.width / newPos.width : 1}, 1, 1)`
+        if (this.vertical) {
+          newEl.style.transform = `translate3d(0, ${oldPos.top - newPos.top}px, 0) scale3d(1, ${newPos.height ? oldPos.height / newPos.height : 1}, 1)`
+        }
+        else {
+          newEl.style.transform = `translate3d(${oldPos.left - newPos.left}px, 0, 0) scale3d(${newPos.width ? oldPos.width / newPos.width : 1}, 1, 1)`
+        }
 
         // allow scope updates to kick in
         this.$nextTick(() => {
@@ -282,8 +294,8 @@ export default Vue.extend({
 
   render (h) {
     return h('div', {
-      staticClass: 'q-tabs row no-wrap items-center',
-      'class': `q-tabs--${this.scrollable ? '' : 'not-'}scrollable`,
+      staticClass: 'q-tabs no-wrap',
+      'class': `${this.vertical ? 'column items-start' : 'row items-center'} q-tabs--${this.scrollable ? '' : 'not-'}scrollable`,
       attrs: { role: 'tablist' }
     }, [
       h(QResizeObserver, {
@@ -305,8 +317,8 @@ export default Vue.extend({
 
       h('div', {
         ref: 'content',
-        staticClass: 'q-tabs__content row no-wrap items-center',
-        'class': this.alignClass
+        staticClass: 'no-wrap items-center',
+        'class': `${this.vertical ? 'q-tabs__content--vertical column' : 'q-tabs__content row'} ${this.alignClass}`
       }, [
         h('div', { staticClass: 'q-tabs__offset invisible' }, ['-'])
       ].concat(this.$slots.default).concat([

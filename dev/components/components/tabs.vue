@@ -1,6 +1,41 @@
 <template>
   <div class="tabs-demo bg-grey-3 q-py-xl">
     <div class="text-primary">
+
+      <div style="display: flex; margin-bottom: 50px; height: 200px; position: relative;">
+        <q-tabs vertical class="vertical-tabs" v-model="vtab">
+          <q-tab name="one" icon="wifi" />
+          <q-tab name="two" icon="bluetooth" />
+          <!-- <q-tab name="three" icon="wifi" />
+          <q-tab name="four" icon="bluetooth" />
+          <q-tab name="five" icon="wifi" />
+          <q-tab name="six" icon="bluetooth" /> -->
+        </q-tabs>
+        <q-tab-panels
+          v-model="vtab"
+          swipeable
+          animated
+          infinite
+          class="text-black text-center"
+        >
+          <q-tab-panel :name="panelTest ? 'two' : 'one'">
+            Tab One <strong v-if="panelTest">(Swapped)</strong> <br> Lorem ipsum dolor sit amet consectetur adipisicing elit. Provident obcaecati repellendus dolores totam nostrum ut repudiandae perspiciatis est accusamus, eaque natus modi rem beatae optio cumque, velit ducimus autem magnam.
+          </q-tab-panel>
+
+          <q-tab-panel :name="panelTest ? 'one' : 'two'">
+            Tab Two <strong v-if="panelTest">(Swapped)</strong>  <br> Lorem ipsum dolor sit amet consectetur adipisicing elit. At iusto neque odio porro, animi ducimus iure autem commodi sint, magni voluptatum molestias illo accusamus voluptate ratione aperiam. Saepe, fugiat vel.
+          </q-tab-panel>
+
+          <q-tab-panel name="three">
+            Tab Three <br> Lorem ipsum dolor sit amet consectetur adipisicing elit. Quis labore inventore accusantium, perferendis eos sapiente culpa consectetur deserunt praesentium cumque distinctio placeat, recusandae id qui odit similique officia? Mollitia, ea!
+          </q-tab-panel>
+
+          <q-tab-panel disable name="four">
+            Tab Four <br> Lorem ipsum dolor sit amet consectetur adipisicing elit. Quis labore inventore accusantium, perferendis eos sapiente culpa consectetur deserunt praesentium cumque distinctio placeat, recusandae id qui odit similique officia? Mollitia, ea!
+          </q-tab-panel>
+        </q-tab-panels>
+      </div>
+
       <q-tabs>
         <q-tab label="Item one" />
         <q-tab label="Item two" />
@@ -260,6 +295,7 @@ export default {
   data () {
     return {
       tab: 'one',
+      vtab: 'one',
       panelTest: false,
       some: false
     }
