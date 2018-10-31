@@ -44,6 +44,7 @@ export default Vue.extend({
         [`text-${this.tabs.activeColor}`]: this.isActive && this.tabs.activeColor,
         'q-tab--full': this.icon && this.label && !this.tabs.inlineLabel,
         'q-tab--no-caps': this.tabs.noCaps,
+        'q-tab--vertical': this.tabs.vertical,
         'q-focusable q-hoverable cursor-pointer': !this.disable,
         disabled: this.disable
       }

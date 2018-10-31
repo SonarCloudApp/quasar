@@ -57,11 +57,12 @@ export default Vue.extend({
         indicatorClass: getIndicatorClass(this.indicatorColor, this.topIndicator, this.vertical),
         narrowIndicator: this.narrowIndicator,
         inlineLabel: this.inlineLabel,
-        noCaps: this.noCaps
+        noCaps: this.noCaps,
+        vertical: this.vertical
       },
       scrollable: false,
-      leftArrow: true,
-      rightArrow: false,
+      startArrow: true,
+      endArrow: false,
       justify: false,
 
       // 2 * mobile .q-tabs__offset min-width
@@ -149,7 +150,7 @@ export default Vue.extend({
       }
     },
 
-    updateContainer ({ width }) {
+    updateContainer ({ width, height }) {
       const scroll = this.$refs.content.scrollWidth - (this.scrollable ? this.extraOffset : 0) > width
       if (this.scrollable !== scroll) {
         this.scrollable = scroll
@@ -228,10 +229,12 @@ export default Vue.extend({
     __updateArrows () {
       const
         content = this.$refs.content,
-        left = content.scrollLeft
+        start = this.vertical ? content.scrollTop : content.scrollLeft
 
-      this.leftArrow = left > 0
-      this.rightArrow = left + content.getBoundingClientRect().width + 5 < content.scrollWidth
+      this.startArrow = start > 0
+      this.endArrow = this.vertical
+        ? start + content.getBoundingClientRect().height + 5 < content.scrollHeight
+        : start + content.getBoundingClientRect().width + 5 < content.scrollWidth
     },
 
     __animScrollTo (value) {
@@ -260,24 +263,29 @@ export default Vue.extend({
     __scrollTowards (value) {
       let
         content = this.$refs.content,
-        left = content.scrollLeft,
-        direction = value < left ? -1 : 1,
+        start = this.vertical ? content.scrollTop : content.scrollLeft,
+        direction = value < start ? -1 : 1,
         done = false
 
-      left += direction * 5
-      if (left < 0) {
+      start += direction * 5
+      if (start < 0) {
         done = true
-        left = 0
+        start = 0
       }
       else if (
-        (direction === -1 && left <= value) ||
-        (direction === 1 && left >= value)
+        (direction === -1 && start <= value) ||
+        (direction === 1 && start >= value)
       ) {
         done = true
-        left = value
+        start = value
       }
 
-      content.scrollLeft = left
+      if (this.vertical) {
+        content.scrollTop = start
+      }
+      else {
+        content.scrollLeft = start
+      }
       this.__updateArrows()
       return done
     }
@@ -304,7 +312,7 @@ export default Vue.extend({
 
       h(QIcon, {
         staticClass: 'q-tabs__arrow q-tabs__arrow--left q-tab__icon',
-        'class': this.leftArrow ? '' : 'invisible',
+        'class': this.startArrow ? '' : 'invisible',
         props: { name: this.leftIcon || this.$q.icon.tabs.left },
         nativeOn: {
           mousedown: this.__scrollToStart,
@@ -317,8 +325,8 @@ export default Vue.extend({
 
       h('div', {
         ref: 'content',
-        staticClass: 'no-wrap items-center',
-        'class': `${this.vertical ? 'q-tabs__content--vertical column' : 'q-tabs__content row'} ${this.alignClass}`
+        staticClass: 'q-tabs__content no-wrap items-center',
+        'class': `${this.vertical ? 'column' : 'row'} ${this.alignClass}`
       }, [
         h('div', { staticClass: 'q-tabs__offset invisible' }, ['-'])
       ].concat(this.$slots.default).concat([
@@ -327,7 +335,7 @@ export default Vue.extend({
 
       h(QIcon, {
         staticClass: 'q-tabs__arrow q-tabs__arrow--right q-tab__icon',
-        'class': this.rightArrow ? '' : 'invisible',
+        'class': this.endArrow ? '' : 'invisible',
         props: { name: this.rightIcon || this.$q.icon.tabs.right },
         nativeOn: {
           mousedown: this.__scrollToEnd,

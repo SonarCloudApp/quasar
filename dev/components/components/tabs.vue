@@ -6,10 +6,12 @@
         <q-tabs vertical class="vertical-tabs" v-model="vtab">
           <q-tab name="one" icon="wifi" />
           <q-tab name="two" icon="bluetooth" />
-          <!-- <q-tab name="three" icon="wifi" />
+          <q-tab name="three" icon="wifi" />
           <q-tab name="four" icon="bluetooth" />
           <q-tab name="five" icon="wifi" />
-          <q-tab name="six" icon="bluetooth" /> -->
+          <q-tab name="six" icon="bluetooth" />
+          <q-tab name="seven" icon="wifi" />
+          <q-tab name="eight" icon="bluetooth" />
         </q-tabs>
         <q-tab-panels
           v-model="vtab"
